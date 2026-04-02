@@ -1,0 +1,48 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# MATLAB autosave / backup
+*.asv
+*.m~
+*.mlx~
+slprj/
+sfprj/
+sccprj/
+
+# Simulink generated/cache files
+*.slxc
+*.mex*
+*.p
+*.rtw
+*.tmwinternal
+
+# Code generation / build outputs
+codegen/
+generated/
+build/
+dist/
+
+# Coverage / test artifacts
+coverage/
+test-results/
+junit*.xml
+
+# Local project settings
+resources/project/Root.type.FilesLayout.xml
+resources/project/Root.type.Categories.xml
+resources/project/ProjectChecksums.xml
+
+# MATLAB user preferences sometimes copied into projects
+*.prj.user
+
+# Toolbox packaging output
+*.mltbx
+
+# Logs / temp
+*.log
+tmp/
+temp/

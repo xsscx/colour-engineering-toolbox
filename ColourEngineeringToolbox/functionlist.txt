@@ -1,0 +1,64 @@
+COLOUR ENGINEERING TOOLBOX
+
+V 1.1 List of functions
+Prepared 31.12.03
+Updated 15.01.04
+
+Colour
+D.m		returns XYZ tristimulus values for CIE illuminants
+R2XYZD50.m	reflectance to XYZ according to ISO 13655
+xyz2uvp.m	XYZ to u',v'
+xyy2XYZ.m	xyY to XYZ
+XYZ2Lab.m	XYZ to CIELAB
+Lab2XYZ.m	CIELAB to XYZ
+rel2abs.m	CIELAB media-relative to perfect diffuser-relative
+abs2rel.m	CIELAB perfect diffuser-relative to media-relative
+sRGB2XYZ.m	sRGB to XYZ
+XYZ2sRGB.m	XYZ to sRGB
+XYZ2Drgb.m	XYZ to colorimetric density
+Drgb2XYZ.m	colorimetric density to XYZ
+XYZ2CAM02.m	compute CIECAM02 correlates from XYZ
+JCh2XYZCAM02.m	CIECAM02 JCh to XYZ
+
+Polar
+LCh2LAB.m	polar LCh to Cartesian CIELAB
+LAB2LCh.m	Cartesian CIELAB to polar LCh 
+hue_angle.m	compute angle from Cartesian data
+angle_add.m	add two polar angles together
+angle_diff.m	substract one polar angle from another
+
+Colour difference
+euclidist.m	euclidean distance: returns CIE 1976 UCS colour difference
+CIE94.m		CIE94 colour difference
+CMC.m		CMC colour difference
+CIE2000.m	CIEDE2000 colour difference
+
+Characterization
+lookup3d.m	perform 3d table look-up
+extract3d.m	extraction for 3D table lookup 
+charac3.m	compute coefficients by third-order polynomial regression 
+create3DLUT.m	generate uniformly-spaced 3D look up table
+polymat3.m	polynomial expansion for charac3 and polyconvert3
+polyconvert3.m	convert between two colour spaces using third-order coefficients
+
+Utility functions
+chunk.m		pass data to function in chunks to optimise memory use
+patchimage2data.m	convert image of colour target to data
+labimread.m	read multi-channel TIFF image as CIELAB
+displaylabimage.m	display CIELAB data as image
+m3vmult.m	multiply array by 3x3 matrix
+rawimage2labdata.m	read CIELAB image data in .raw format with no headers
+labdata2rawimage.m	write CIELAB data to .raw image with no headers
+M2V.m		convert nxmxp matrix to rxc vector for columnwise processing
+V2M.m		convert rxc vector representation to nxmxp matrix
+labimwrite.m	write CIELAB data to multi-channel TIFF image 
+displaygamut.m	3D visualization of gamut boundary data 
+ 
+Psychophysics
+normsinv.m	inverse of normal cumulative distribution function
+ploterror.m	plot z-score data as formatted error bars
+pc_seq.m	generate pair-wise comparison sequence
+rankorder.m	compute interval scores from rank order data 
+paircomp.m	compute interval scores from pair comparison data
+catjudge.m	compute interval scores from category judgement data
+plotcaterror.m	plot z-score data as error bars with categorical boundaries
