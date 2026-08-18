@@ -141,7 +141,7 @@ Q=(4/c)*(J/100).^.5*(Aw+4)*FL.^0.25; % colourfulness
 C=t.^.9.*(J/100).^.5*(1.64-0.29^n).^.73; % chroma
 M=C*FL^0.25; % brightness
 s=100*(M./Q).^.5; % saturation
-ac=C.*cos(h); % redness-greenness Cartesian coordinates
-bc=C.*sin(h); % blueness-yellowness Cartesian coordinates
+ac=C.*cos(h*pi/180); % redness-greenness Cartesian coordinates
+bc=C.*sin(h*pi/180); % blueness-yellowness Cartesian coordinates
 
 CAM=[J,C,h,Q,M,ac,bc,s];

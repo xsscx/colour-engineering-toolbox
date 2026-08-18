@@ -2,9 +2,9 @@ function [XYZ,name]=d(K)
 % D: returns XYZ tristimulus values of various CIE standard illuminants.
 %
 %        xyz=d(50) returns XYZ values for the D50 illuminant
-%        xyz=d(55) returns XYZ values for the D50 illuminant
-%        xyz=d(65) returns XYZ values for the D50 illuminant
-%        xyz=d(75) returns XYZ values for the D50 illuminant
+%        xyz=d(55) returns XYZ values for the D55 illuminant
+%        xyz=d(65) returns XYZ values for the D65 illuminant
+%        xyz=d(75) returns XYZ values for the D75 illuminant
 %        xyz=d('A') returns XYZ values for Illuminant A
 %        xyz=d('C') returns XYZ values for Illuminant C
 %
@@ -40,13 +40,27 @@ function [XYZ,name]=d(K)
    all=[labels,xyz];
 
 if nargin>0
-   switch K
-   case 'A';XYZ=A;name='A';
-   case 'C';XYZ=C;name='C';
-   case 50;XYZ=D50;name='D50';
-   case 55;XYZ=D55;name='D55';
-   case 65;XYZ=D65;name='65';
-   case 75;XYZ=D75;name='75';
+   if (ischar(K) || (isstring(K) && isscalar(K)))
+      switch upper(char(K))
+      case 'A';XYZ=A;name='A';
+      case 'C';XYZ=C;name='C';
+      otherwise
+         error('ColourEngineeringToolbox:d:InvalidIlluminant', ...
+             'Illuminant must be A, C, 50, 55, 65, or 75.');
+      end
+   elseif isnumeric(K) && isscalar(K)
+      switch K
+      case 50;XYZ=D50;name='D50';
+      case 55;XYZ=D55;name='D55';
+      case 65;XYZ=D65;name='D65';
+      case 75;XYZ=D75;name='D75';
+      otherwise
+         error('ColourEngineeringToolbox:d:InvalidIlluminant', ...
+             'Illuminant must be A, C, 50, 55, 65, or 75.');
+      end
+   else
+      error('ColourEngineeringToolbox:d:InvalidIlluminant', ...
+          'Illuminant must be A, C, 50, 55, 65, or 75.');
    end
 else
     if nargout>0;

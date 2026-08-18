@@ -8,8 +8,9 @@ function D=euclidist(data1,data2)
 %   book:	https://www.wiley.com/en-us/Colour+Engineering%3A+Achieving+Device+Independent+Colour-p-9780470854136
 %   web:     	http://www.digitalcolour.org
 
-if size(data1)~=size(data2)
-    error('Input coordinates have different dimensions');
+if ~isequal(size(data1),size(data2))
+    error('ColourEngineeringToolbox:euclidist:DimensionMismatch', ...
+        'Input coordinates have different dimensions.');
 end
 
 c1=size(data1,2);
@@ -19,6 +20,7 @@ elseif c1==2
    D=((data1(:,1)-data2(:,1)).^2+(data1(:,2)-data2(:,2)).^2).^0.5;
 elseif c1==3
    D=((data1(:,1)-data2(:,1)).^2+(data1(:,2)-data2(:,2)).^2+(data1(:,3)-data2(:,3)).^2).^0.5;
-else error('euclidist cannot calculate the distance with more than three coordinates')
+else
+    error('ColourEngineeringToolbox:euclidist:UnsupportedDimensions', ...
+        'Euclidean distance requires one to three coordinates.')
 end
-

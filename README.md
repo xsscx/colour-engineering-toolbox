@@ -83,6 +83,14 @@ Psychophysical scaling and plotting functions:
 2. Unzip the toolbox folder.
 3. Add the ColourEngineeringToolbox root and its subfolders to the MATLAB path.
 
+## Testing
+From the repository root, run the automated calculation checks in MATLAB:
+
+```matlab
+results = runtests('tests');
+assertSuccess(results);
+```
+
 
 ## Contributing
 

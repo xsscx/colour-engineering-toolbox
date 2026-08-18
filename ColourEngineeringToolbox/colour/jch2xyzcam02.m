@@ -20,18 +20,37 @@ function XYZ=jch2xyzcam02(JCh,XYZw,La,Yb,surround)
 
 
 % Get parameters
-if nargin>2;else La=2000/(pi*5);end % luminance of adapted white point
-if nargin>3;else Yb=20;end % luminance of background (typically 20)
-if nargin>4;
-   if strcmp(surround,'avg');c=0.69;Nc=1;end % average surround
-   if strcmp(surround,'dim');c=0.59;Nc=0.9;end % dim surround
-   if strcmp(surround,'dark');c=0.525;Nc=0.8;end % dark surround
-   if strcmp(surround,'T1');c=0.46;Nc=0.9;end % ISO 3664 T1 surround
-else c=0.69;Nc=1;  % ISO 3664 P1, average surround
+if nargin<=2
+   La=2000/(pi*5); % luminance of adapted white point
+end
+if nargin<=3
+   Yb=20; % luminance of background (typically 20)
+end
+if nargin>4
+   if isnumeric(surround) && isvector(surround) && ...
+         ismember(numel(surround),[2 3]) && all(isfinite(surround)) && ...
+         all(surround>0)
+      c=surround(1);Nc=surround(2);
+      if numel(surround)==3;F=surround(3);else F=1;end
+   elseif ischar(surround) || (isstring(surround) && isscalar(surround))
+      switch lower(char(surround))
+      case {'avg','average'};c=0.69;Nc=1;F=1;
+      case 'dim';c=0.59;Nc=0.9;F=0.9;
+      case 'dark';c=0.525;Nc=0.8;F=0.8;
+      case 't1';c=0.46;Nc=0.9;F=1;
+      otherwise
+         error('ColourEngineeringToolbox:jch2xyzcam02:InvalidSurround', ...
+             'Surround must be avg, average, dim, dark, T1, or a numeric vector.');
+      end
+   else
+      error('ColourEngineeringToolbox:jch2xyzcam02:InvalidSurround', ...
+          'Surround must be avg, average, dim, dark, T1, or a numeric vector.');
+   end
+else
+   c=0.69;Nc=1;F=1;  % ISO 3664 P1, average surround
 end
 
 % Calculate constants
-F=1;
 Yw=XYZw(2); 
 D=F*(1-(1/3.6)*exp((-La-42)/92)); %degree of adaptation
 k=1/(5*La+1);
@@ -62,7 +81,7 @@ MCAT02i=[1.096124,-0.278869,0.182745;
 MHM=MH*MCAT02i;
 
 % Pre-multiply CAT02 and inverse HPE matrices
-MHCi=MCAT02*inv(MH);
+MHCi=MCAT02/MH;
 
    % Calculate Aw
    RGBw=(MCAT02*XYZw')';
@@ -133,4 +152,3 @@ B=Bc/(Yw*(D/Bw)+1-D);
 % Calculate XYZ
 XYZ=(MCAT02i*[R,G,B]')';
 XYZ(XYZ<0)=0;
-

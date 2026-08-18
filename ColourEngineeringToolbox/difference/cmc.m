@@ -10,9 +10,12 @@ function DE=cmc(LAB1,LAB2,K)
 
 %Set constants for weighting lightness and chroma relative to hue
 if nargin>2
-   if length(K)>1
-      l=K(1);c=K(2);
+   if ~isnumeric(K) || ~isvector(K) || numel(K)~=2 || ...
+         any(~isfinite(K)) || any(K<=0)
+      error('ColourEngineeringToolbox:cmc:InvalidWeights', ...
+          'K must be a vector of two positive finite values.');
    end
+   l=K(1);c=K(2);
 else
    l=1;c=1;
 end

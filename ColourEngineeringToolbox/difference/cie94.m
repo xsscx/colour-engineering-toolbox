@@ -17,9 +17,12 @@ function DE94=cie94(LABREF,LAB,K)
 
 
 if nargin>2
-   if length(K)>2
-      kL=K(1);kC=K(2);kH=K(3);
+   if ~isnumeric(K) || ~isvector(K) || numel(K)~=3 || ...
+         any(~isfinite(K)) || any(K<=0)
+      error('ColourEngineeringToolbox:cie94:InvalidWeights', ...
+          'K must be a vector of three positive finite values.');
    end
+   kL=K(1);kC=K(2);kH=K(3);
 else
    kL=1;kC=1;kH=1;
 end
@@ -30,8 +33,8 @@ Cref=(aref.^2+bref.^2).^0.5;
 L=LAB(:,1);a=LAB(:,2);b=LAB(:,3);
 C=(a.^2+b.^2).^0.5;
 
-Sc=1+0.045*(Cref+C)/2;
-Sh=1+0.015*(Cref+C)/2;
+Sc=1+0.045*Cref;
+Sh=1+0.015*Cref;
 
 DC=abs(Cref-C);
 DL=abs(Lref-L);

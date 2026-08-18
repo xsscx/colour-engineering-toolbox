@@ -22,9 +22,13 @@ function DE=ciede2000(LABREF,LAB,K)
 % set the values of parametric weighting factors KL,KC,KH
 
 if nargin>2
-   if length(K)==3
+   if ~isnumeric(K) || ~isvector(K) || ~ismember(numel(K),[2 3]) || ...
+         any(~isfinite(K)) || any(K<=0)
+       error('ColourEngineeringToolbox:ciede2000:InvalidWeights', ...
+           'K must be a vector of two or three positive finite values.');
+   elseif length(K)==3
        kL=K(1);kC=K(2);kH=K(3);
-   elseif length(K)==2
+   else
        kL=K(1);kC=K(2);kH=1;
    end
 else
