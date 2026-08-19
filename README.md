@@ -1,3 +1,11 @@
+## CET v2 
+### Corrections by @xsscx
+2026-08-19 11:42:09 UTC
+
+### Fork Summary
+Fork contains corrections for errors & omissions resulting in material differences in calculation results
+
+---
 # Colour Engineering Toolbox
 
 ## Introduction
