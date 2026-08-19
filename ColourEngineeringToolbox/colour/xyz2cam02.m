@@ -27,6 +27,9 @@ function CAM=xyz2cam02(XYZ,XYZw,La,Yb,surround)
 
 % Get parameters
 F=1;
+if nargin<2
+   XYZw=d(50); % CIE D50 default reference white
+end
 if nargin>2; else La=2000/(pi*5);end % luminance of adapted white point 
 if nargin>3; else Yb=20;end % luminance of background (typically 20)
 if nargin>4;
@@ -141,7 +144,7 @@ Q=(4/c)*(J/100).^.5*(Aw+4)*FL.^0.25; % colourfulness
 C=t.^.9.*(J/100).^.5*(1.64-0.29^n).^.73; % chroma
 M=C*FL^0.25; % brightness
 s=100*(M./Q).^.5; % saturation
-ac=C.*cos(h); % redness-greenness Cartesian coordinates
-bc=C.*sin(h); % blueness-yellowness Cartesian coordinates
+ac=C.*cos(h*pi/180); % redness-greenness Cartesian coordinates
+bc=C.*sin(h*pi/180); % blueness-yellowness Cartesian coordinates
 
 CAM=[J,C,h,Q,M,ac,bc,s];

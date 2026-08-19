@@ -1,3 +1,20 @@
+## CET v2
+### Corrections by @xsscx
+2026-08-19 11:42:09 UTC
+
+### Fork Summary
+Fork contains corrections for errors & omissions resulting in material differences in calculation results
+
+## Workflow Results
+Job: https://github.com/xsscx/colour-engineering-toolbox/actions/runs/32249368712/job/96056746650#step:5:9
+```
+CIE94: before 1.379995536663367, after 1.395038867858738
+d(65): before A [109.85 100 35.8]
+d(65): after D65 [95.04 100 108.89]
+lookup3d valid input: before rejected 1, after rejected 0
+CIECAM02 ac: before 0.056963690697, expected -0.054591236569, after -0.054591236569
+```
+---
 # Colour Engineering Toolbox
 
 ## Introduction
@@ -82,6 +99,14 @@ Psychophysical scaling and plotting functions:
 1. Download the latest release from this Github project.
 2. Unzip the toolbox folder.
 3. Add the ColourEngineeringToolbox root and its subfolders to the MATLAB path.
+
+## Testing
+From the repository root, run the automated calculation checks in MATLAB:
+
+```matlab
+results = runtests('tests');
+assertSuccess(results);
+```
 
 
 ## Contributing

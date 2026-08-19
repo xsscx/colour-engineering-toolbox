@@ -22,62 +22,64 @@ function DE=ciede2000(LABREF,LAB,K)
 % set the values of parametric weighting factors KL,KC,KH
 
 if nargin>2
-   if length(K)==3
+   if ~isnumeric(K) || ~isvector(K) || ~ismember(numel(K),[2 3]) || ...
+         any(~isfinite(K)) || any(K<=0)
+       error('ColourEngineeringToolbox:ciede2000:InvalidWeights', ...
+           'K must be a vector of two or three positive finite values.');
+   elseif length(K)==3
        kL=K(1);kC=K(2);kH=K(3);
-   elseif length(K)==2
+   else
        kL=K(1);kC=K(2);kH=1;
    end
 else
    kL=1;kC=1;kH=1;
 end
 
-%___________________________________________________________________
+L1=LABREF(:,1);a1=LABREF(:,2);b1=LABREF(:,3);
+L2=LAB(:,1);a2=LAB(:,2);b2=LAB(:,3);
 
-L=LABREF(:,1);a=LABREF(:,2);b=LABREF(:,3);
-C=(a.^2+b.^2).^0.5;
+C1=sqrt(a1.^2+b1.^2);
+C2=sqrt(a2.^2+b2.^2);
+Cbar=(C1+C2)/2;
+G=0.5*(1-sqrt(Cbar.^7./(Cbar.^7+25^7)));
 
-Ls=LAB(:,1);as=LAB(:,2);bs=LAB(:,3);
-Cs=(as.^2+bs.^2).^0.5;
+a1p=(1+G).*a1;
+a2p=(1+G).*a2;
+C1p=sqrt(a1p.^2+b1.^2);
+C2p=sqrt(a2p.^2+b2.^2);
+h1p=mod(atan2d(b1,a1p),360);
+h2p=mod(atan2d(b2,a2p),360);
 
-%find G and recompute a', C' and h'
-Cm=(C+Cs)/2;
-G=0.5*(1-(Cm.^7./(Cm.^7+25^7)).^0.5);
-a=(1+G).*a;
-as=(1+G).*as;
-C=(a.^2+b.^2).^0.5;
-h=hue_angle(a,b);
-Cs=(as.^2+bs.^2).^0.5;
-hs=hue_angle(as,bs);
+DL=L2-L1;
+DC=C2p-C1p;
+Dh=h2p-h1p;
+zero_chroma=(C1p.*C2p)==0;
+Dh(zero_chroma)=0;
+hue_wrap_threshold=180+eps(180);
+Dh(Dh>hue_wrap_threshold)=Dh(Dh>hue_wrap_threshold)-360;
+Dh(Dh<-hue_wrap_threshold)=Dh(Dh<-hue_wrap_threshold)+360;
+DH=2*sqrt(C1p.*C2p).*sind(Dh/2);
 
-%find the mean chroma and hue for each reference/sample pair
-Cm=(Cs+C)/2;
-hm=(h+hs)/2;
-j=find(abs(h-hs)>180);hm(j)=hm(j)-180;
-k=hm<0;hm(k)=hm(k)+360; % case where sample and reference cross h=0;
-m=(a==0) & (b==0);hm(m)=hs(m); % case where reference is at the origin
-n=(as==0) & (bs==0);hm(n)=h(n); % case where sample is at the origin
+Lbar=(L1+L2)/2;
+Cbar=(C1p+C2p)/2;
+hbar=(h1p+h2p)/2;
+hue_difference=abs(h1p-h2p);
+hbar(zero_chroma)=h1p(zero_chroma)+h2p(zero_chroma);
+wrap=(~zero_chroma) & (hue_difference>hue_wrap_threshold);
+sum_below_360=wrap & ((h1p+h2p)<360);
+hbar(sum_below_360)=(h1p(sum_below_360)+h2p(sum_below_360)+360)/2;
+hbar(wrap & ~sum_below_360)=(h1p(wrap & ~sum_below_360)+h2p(wrap & ~sum_below_360)-360)/2;
 
-% hue difference
-Dh=h-hs;
-Dh(Dh>180)=360-Dh(Dh>180); % case where sample and reference cross h=0;
-p=(bs==0) & (b<0);Dh(p)=-Dh(p); % case where bs=0 and b < 0
+T=1-0.17*cosd(hbar-30)+0.24*cosd(2*hbar)+ ...
+    0.32*cosd(3*hbar+6)-0.2*cosd(4*hbar-63);
+SL=1+(0.015*(Lbar-50).^2)./sqrt(20+(Lbar-50).^2);
+SC=1+0.045*Cbar;
+SH=1+0.015*Cbar.*T;
+Dt=30*exp(-((hbar-275)/25).^2);
+RC=2*sqrt(Cbar.^7./(Cbar.^7+25^7));
+RT=-sind(2*Dt).*RC;
 
-% L* and C* difference
-DL=(L-Ls);
-DC=(C-Cs);
-rad=pi/180;
-DH=2*((C.*Cs).^0.5).*sin(rad*(Dh)/2);
-
-% calculate T
-T=1-0.17*cos(rad*(hm-30))+0.24*cos(rad*2*hm)+0.32*cos(rad*(3*hm+6))-0.2*cos(rad*(4*hm-63));
-
-%calculate weighting factors SL, SC, SH
-SL=1+(0.015.*((L+Ls)./2-50).^2)./(20+((L+Ls)./2-50).^2).^.5;
-SC=1+0.045.*Cm;
-SH=1+0.015.*Cm.*T;
-
-Dt=30*exp(-(((hm-275)/25).^2));
-RC=2.*((Cm.^7)./(Cm.^7+25.^7)).^.5;
-RT=-sin(2*rad*Dt).*RC;
-
-DE=((DL./(SL.*kL)).^2+(DC./(SC.*kC)).^2+(DH./(SH.*kH)).^2+RT.*(DC./(SC.*kC)).*(DH./(SH.*kH))).^0.5;
+lightness=DL./(kL*SL);
+chroma=DC./(kC*SC);
+hue=DH./(kH*SH);
+DE=sqrt(lightness.^2+chroma.^2+hue.^2+RT.*chroma.*hue);

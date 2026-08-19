@@ -1,0 +1,169 @@
+name: MATLAB correction evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ColourEngineeringToolbox/**'
+      - 'tests/**'
+      - '.github/scripts/demonstrate_corrections.m'
+      - '.github/workflows/matlab-correction-evidence.yml'
+  push:
+    branches: [work/matlab-calculation-validation]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matlab-correction-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demonstrate:
+    name: Demonstrate original and corrected results
+    runs-on: windows-2022
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh -NoProfile -NoLogo -NonInteractive -Command {0}
+    steps:
+      - name: Check out correction branch
+        # actions/checkout v5.0.0 (node24)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Entry banner
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          Write-Host '============================================================'
+          Write-Host 'MATLAB CORRECTION EVIDENCE: START'
+          Write-Host 'Baseline: a15b08328356 (original import)'
+          Write-Host 'Candidate: current branch checkout'
+          Write-Host '============================================================'
+
+      - name: Check out original implementation
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          git worktree add --detach "$env:RUNNER_TEMP\cet-before" a15b08328356
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to check out the original implementation."
+          }
+
+      - name: Runner and checkout diagnostics
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          Write-Host '============================================================'
+          Write-Host 'RUNNER AND CHECKOUT DIAGNOSTICS'
+          Write-Host "Operating system: $([System.Environment]::OSVersion.VersionString)"
+          Write-Host "PowerShell: $($PSVersionTable.PSVersion)"
+          Write-Host "Git: $(git --version)"
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+          Write-Host "Runner temporary directory: $env:RUNNER_TEMP"
+          Write-Host 'Candidate commit:'
+          git --no-pager log -1 --format=fuller
+          Write-Host 'Candidate worktree status:'
+          git status --short --branch
+          Write-Host 'Configured worktrees:'
+          git worktree list --porcelain
+          Write-Host '============================================================'
+
+      - name: Set up MATLAB
+        # matlab-actions/setup-matlab v3
+        uses: matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9
+        with:
+          release: R2026a
+
+      - name: Show before and after results
+        # matlab-actions/run-command v3
+        uses: matlab-actions/run-command@75644028e1e2aa374bbfdc968a65718a178cc264
+        env:
+          CET_BASELINE_ROOT: ${{ runner.temp }}/cet-before
+        with:
+          command: "run('.github/scripts/demonstrate_corrections.m')"
+          generate-summary: false
+
+      - name: Developer evidence summary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          Write-Host '============================================================'
+          Write-Host 'DEVELOPER SUMMARY'
+          Write-Host 'This run compares the original import with this branch.'
+          Write-Host 'Observed branch changes: CIE94 weighting, d(65) dispatch,'
+          Write-Host 'lookup3d range handling, and CIECAM02 Cartesian conversion.'
+          Write-Host 'The output demonstrates behavior only; it does not resolve'
+          Write-Host 'the CIE94 reference-chroma versus mean-chroma policy.'
+          Write-Host '============================================================'
+
+      - name: Run corrected calculation tests
+        # matlab-actions/run-command v3
+        uses: matlab-actions/run-command@75644028e1e2aa374bbfdc968a65718a178cc264
+        with:
+          command: "results = runtests('tests','Verbosity',4); disp(results); assertSuccess(results)"
+          generate-summary: false
+
+      - name: Write GitHub summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          @'
+          ## MATLAB correction evidence
+
+          This job compares the original import (`a15b08328356`) against the
+          branch under review. It makes no standards-conformance decision.
+
+          | Behavior | Before | After |
+          | --- | --- | --- |
+          | CIE94 sample result | `1.379995536663367` | `1.395038867858738` |
+          | `d(65)` | `A [109.85 100 35.8]` | `D65 [95.04 100 108.89]` |
+          | Valid `lookup3d` input | Rejected | Accepted |
+          | CIECAM02 `ac` | Does not match `C*cosd(h)` | Matches `C*cosd(h)` |
+
+          ### Developer review boundary
+
+          The branch demonstrates its implementation changes and their
+          calculated results. In particular, CIE94 reference-chroma versus
+          mean-chroma weighting remains a maintainer scientific-policy review,
+          not a conclusion established by this workflow.
+          '@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+          "Calculation-test job status: $env:JOB_STATUS" |
+            Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Exit banner
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
+          git config --global credential.helper ""
+          if (Test-Path env:GITHUB_TOKEN) { Remove-Item env:GITHUB_TOKEN }
+
+          Write-Host '============================================================'
+          Write-Host "MATLAB CORRECTION EVIDENCE: END ($env:JOB_STATUS)"
+          Write-Host '============================================================'

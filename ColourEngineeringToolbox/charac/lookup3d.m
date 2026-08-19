@@ -39,14 +39,16 @@ else
    % if no input table is supplied, find dimension of output table 
    % and generate matching uniformly spaced input table
    Ti=create3dlut(n);
-   if any(input_data<max(max(Ti)))
-      error('Input data must be ranged 0-1 if no input table is supplied');
+   if any(input_data(:)<0) || any(input_data(:)>1)
+      error('ColourEngineeringToolbox:lookup3d:InputOutOfRange', ...
+          'Input data must be ranged 0-1 if no input table is supplied');
    else data=input_data;
    end
 end
 
 % get bounding cube around each point in data
 lutrows=extract3d(data,n);P=lutrows;
+out=zeros(size(data,1),3);
 
 % difference from input data to lower bounding corner in input table
 d=data-Ti(P(:,1),:);
@@ -73,4 +75,3 @@ for j=1:3
 	out(:,j)=c1+c2.*dx+c3.*dy+c4.*dz+c5.*dx.*dy+c6.*dx.*dz...
 	+c7.*dy.*dz+c8.*dx.*dy.*dz;
 end
-
