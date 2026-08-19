@@ -1,0 +1,66 @@
+name: MATLAB correction evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ColourEngineeringToolbox/**'
+      - 'tests/**'
+      - '.github/scripts/demonstrate_corrections.m'
+      - '.github/workflows/matlab-correction-evidence.yml'
+  push:
+    branches: [work/matlab-calculation-validation]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matlab-correction-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demonstrate:
+    name: Demonstrate original and corrected results
+    runs-on: windows-2022
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh -NoProfile -NoLogo -NonInteractive -Command {0}
+    steps:
+      - name: Check out correction branch
+        # actions/checkout v5.0.0 (node24)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out original implementation
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git worktree add --detach "$env:RUNNER_TEMP\cet-before" a15b08328356
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to check out the original implementation."
+          }
+
+      - name: Set up MATLAB
+        # matlab-actions/setup-matlab v3
+        uses: matlab-actions/setup-matlab@2323adb8243827ea460b0def4c413545aaec46a9
+        with:
+          release: R2026a
+
+      - name: Show before and after results
+        # matlab-actions/run-command v3
+        uses: matlab-actions/run-command@75644028e1e2aa374bbfdc968a65718a178cc264
+        env:
+          CET_BASELINE_ROOT: ${{ runner.temp }}/cet-before
+        with:
+          command: "run('.github/scripts/demonstrate_corrections.m')"
+          generate-summary: false
+
+      - name: Run corrected calculation tests
+        # matlab-actions/run-command v3
+        uses: matlab-actions/run-command@75644028e1e2aa374bbfdc968a65718a178cc264
+        with:
+          command: "results = runtests('tests'); assertSuccess(results)"
+          generate-summary: false
